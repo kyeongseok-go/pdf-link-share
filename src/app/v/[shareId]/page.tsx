@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { SITE_URL, SITE_NAME } from '@/lib/constants';
+import { headers } from 'next/headers';
+import { SITE_NAME } from '@/lib/constants';
 import { isExpired } from '@/lib/date';
 import ExpiredNotice from '@/components/expired/ExpiredNotice';
 import Header from '@/components/common/Header';
@@ -15,8 +16,12 @@ interface Props {
 
 async function fetchDocumentMeta(shareId: string): Promise<DocumentMeta | null> {
   try {
-    const res = await fetch(`${SITE_URL}/api/doc/${shareId}`, {
-      // Revalidate every 60s for SSR caching
+    const headersList = await headers();
+    const host = headersList.get('host') ?? '';
+    const protocol = host.startsWith('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
+
+    const res = await fetch(`${baseUrl}/api/doc/${shareId}`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
