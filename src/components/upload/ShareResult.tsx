@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { UploadResponse } from '@/types';
 import { formatKoreanDate, formatShortDate } from '@/lib/date';
 
@@ -67,15 +67,22 @@ export default function ShareResult({ result, generateQr, onReset }: ShareResult
     link.click();
   }, [qrDataUrl, result.fileName]);
 
-  const shareKakao = useCallback(() => {
-    // Kakao SDK sharing — fallback to URL copy if SDK not loaded
-    if (typeof window !== 'undefined' && 'Kakao' in window) {
-      // Kakao.Share would be used here
+  const shareKakao = useCallback(async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `📄 ${result.fileName}`,
+          text: 'PDF 링크공유기로 공유된 문서입니다.',
+          url: result.shareUrl,
+        });
+        return;
+      } catch {
+        // 사용자가 공유 취소 시 무시
+      }
     }
-    // Fallback: open share URL
-    const kakaoUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=&url=${encodeURIComponent(result.shareUrl)}`;
-    window.open(kakaoUrl, '_blank', 'width=400,height=600');
-  }, [result.shareUrl]);
+    // Web Share API 미지원 시 클립보드 복사로 대체
+    await copyToClipboard();
+  }, [result.shareUrl, result.fileName, copyToClipboard]);
 
   return (
     <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-lg animate-slide-up">

@@ -5,7 +5,7 @@ import { uploadToR2 } from '@/lib/r2';
 import { insertDocument, countRecentUploads } from '@/lib/db';
 import { generateDocumentId, generateShareId } from '@/lib/nanoid';
 import { computeExpiresAt } from '@/lib/date';
-import { RATE_LIMIT, SITE_URL } from '@/lib/constants';
+import { RATE_LIMIT } from '@/lib/constants';
 import type { ExpiryOption } from '@/types';
 
 export const runtime = 'edge';
@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
       uploaderIp: ip,
     });
 
-    const shareUrl = `${SITE_URL}/v/${shareId}`;
+    const origin = new URL(request.url).origin;
+    const shareUrl = `${origin}/v/${shareId}`;
 
     return NextResponse.json({
       success: true,
