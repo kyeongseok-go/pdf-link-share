@@ -45,7 +45,7 @@ export default function PdfViewer({
     import('pdfjs-dist').then((pdfjsLib) => {
       if (cancelled) return;
       // Set worker source
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
       setPdfLib(pdfjsLib);
     });
     return () => { cancelled = true; };
