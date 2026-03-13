@@ -22,6 +22,12 @@ function PdfSkeleton() {
   );
 }
 
+function getPinchDist(touches: TouchList): number {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 export default function PdfViewer({
   fileUrl,
   fileName,
@@ -29,22 +35,24 @@ export default function PdfViewer({
   downloadUrl,
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const pagesRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1.2);
+  const [visualScale, setVisualScale] = useState(1);
   const [pdfLib, setPdfLib] = useState<typeof import('pdfjs-dist') | null>(null);
   const [pdfDoc, setPdfDoc] = useState<import('pdfjs-dist').PDFDocumentProxy | null>(null);
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null);
 
   // Load pdf.js dynamically (only on client)
   useEffect(() => {
     let cancelled = false;
     import('pdfjs-dist').then((pdfjsLib) => {
       if (cancelled) return;
-      // Set worker source
       pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
       setPdfLib(pdfjsLib);
     });
@@ -116,7 +124,6 @@ export default function PdfViewer({
       }
     }
 
-    // Render all pages
     for (let i = 1; i <= numPages; i++) {
       renderPage(i);
     }
@@ -141,12 +148,63 @@ export default function PdfViewer({
       }
     }, options);
 
-    // Observe all page containers
     const pageElements = document.querySelectorAll('[data-page]');
     pageElements.forEach((el) => observerRef.current?.observe(el));
 
     return () => observerRef.current?.disconnect();
   }, [numPages, loading]);
+
+  // Pinch-to-zoom: passive:false 필요하므로 useEffect로 직접 등록
+  useEffect(() => {
+    const el = pagesRef.current;
+    if (!el) return;
+
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length === 2) {
+        pinchRef.current = {
+          startDist: getPinchDist(e.touches),
+          startScale: scale,
+        };
+      }
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (e.touches.length === 2 && pinchRef.current) {
+        e.preventDefault(); // passive:false 필요
+        const ratio = getPinchDist(e.touches) / pinchRef.current.startDist;
+        const next = Math.min(3, Math.max(0.5, pinchRef.current.startScale * ratio));
+        setVisualScale(next / scale);
+      }
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (pinchRef.current && e.touches.length < 2) {
+        setScale((prev) => {
+          const next = Math.min(3, Math.max(0.5, prev * visualScaleRef.current));
+          return next;
+        });
+        setVisualScale(1);
+        pinchRef.current = null;
+      }
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  // scale이 바뀔 때마다 핸들러 재등록
+  }, [scale, loading, numPages]);
+
+  // visualScale을 ref로도 유지 (클로저 문제 방지)
+  const visualScaleRef = useRef(1);
+  useEffect(() => {
+    visualScaleRef.current = visualScale;
+  }, [visualScale]);
 
   const scrollToPage = useCallback((pageNum: number) => {
     const el = document.querySelector(`[data-page="${pageNum}"]`);
@@ -190,7 +248,15 @@ export default function PdfViewer({
   return (
     <div ref={containerRef} className="relative">
       {/* Pages */}
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-4 pb-24">
+      <div
+        ref={pagesRef}
+        className="max-w-3xl mx-auto px-4 py-6 space-y-4 pb-24"
+        style={{
+          transform: visualScale !== 1 ? `scale(${visualScale})` : undefined,
+          transformOrigin: 'top center',
+          transition: visualScale === 1 ? 'transform 0.15s ease-out' : undefined,
+        }}
+      >
         {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
           <div
             key={pageNum}
@@ -252,13 +318,13 @@ export default function PdfViewer({
               disabled={scale <= 0.5}
               className="
                 w-9 h-9 rounded-lg bg-white/20 text-white
-                flex items-center justify-center text-lg
+                flex items-center justify-center text-base font-bold
                 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed
                 transition-colors
               "
               aria-label="축소"
             >
-              🔍
+              −
             </button>
             <span className="text-white text-xs font-mono-link min-w-[3rem] text-center">
               {Math.round(scale * 100)}%
@@ -268,13 +334,13 @@ export default function PdfViewer({
               disabled={scale >= 3}
               className="
                 w-9 h-9 rounded-lg bg-white/20 text-white
-                flex items-center justify-center text-lg
+                flex items-center justify-center text-base font-bold
                 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed
                 transition-colors
               "
               aria-label="확대"
             >
-              🔍
+              ＋
             </button>
           </div>
 
