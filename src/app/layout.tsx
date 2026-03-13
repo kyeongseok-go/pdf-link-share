@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import KakaoInit from '@/components/common/KakaoInit';
 
 export const metadata: Metadata = {
   title: 'PDF 링크공유기 | 파일을 링크로, 안전하게 공유하세요',
@@ -46,6 +47,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="font-pretendard bg-surface text-text-main antialiased">
+        <KakaoInit />
         {children}
       </body>
     </html>

@@ -68,6 +68,31 @@ export default function ShareResult({ result, generateQr, onReset }: ShareResult
   }, [qrDataUrl, result.fileName]);
 
   const shareKakao = useCallback(async () => {
+    // Kakao SDK 우선 사용 (NEXT_PUBLIC_KAKAO_APP_KEY 설정 시)
+    if (typeof window !== 'undefined' && window.Kakao?.isInitialized()) {
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: result.fileName,
+          description: '📄 PDF 링크공유기로 공유된 문서입니다. 탭하여 열람하세요.',
+          link: {
+            mobileWebUrl: result.shareUrl,
+            webUrl: result.shareUrl,
+          },
+        },
+        buttons: [
+          {
+            title: '문서 열람하기',
+            link: {
+              mobileWebUrl: result.shareUrl,
+              webUrl: result.shareUrl,
+            },
+          },
+        ],
+      });
+      return;
+    }
+    // Kakao SDK 미사용 시 Web Share API → 클립보드 복사 순으로 대체
     if (navigator.share) {
       try {
         await navigator.share({
@@ -77,10 +102,9 @@ export default function ShareResult({ result, generateQr, onReset }: ShareResult
         });
         return;
       } catch {
-        // 사용자가 공유 취소 시 무시
+        // 취소 시 무시
       }
     }
-    // Web Share API 미지원 시 클립보드 복사로 대체
     await copyToClipboard();
   }, [result.shareUrl, result.fileName, copyToClipboard]);
 
