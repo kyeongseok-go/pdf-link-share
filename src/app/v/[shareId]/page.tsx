@@ -7,6 +7,8 @@ import SecurityBanner from '@/components/viewer/SecurityBanner';
 import PdfViewer from '@/components/viewer/PdfViewer';
 import type { DocumentMeta } from '@/types';
 
+export const runtime = 'edge';
+
 interface Props {
   params: Promise<{ shareId: string }>;
 }
