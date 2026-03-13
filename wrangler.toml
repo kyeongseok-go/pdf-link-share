@@ -16,5 +16,3 @@ database_id = "e90461ae-88be-487f-85c3-17bf483c02f9"
 [dev]
 port = 3000
 
-[triggers]
-crons = ["0 * * * *"]
