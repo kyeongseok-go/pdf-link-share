@@ -1,0 +1,20 @@
+name = "pdf-link-sharer"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "pdfweblink-storage"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pdfweblink-db"
+database_id = "e90461ae-88be-487f-85c3-17bf483c02f9"
+
+# 로컬 개발용 (npm run dev 시 setupDevPlatform이 아래 설정을 읽어 시뮬레이션)
+[dev]
+port = 3000
+
+[triggers]
+crons = ["0 * * * *"]
