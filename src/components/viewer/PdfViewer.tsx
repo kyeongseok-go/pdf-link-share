@@ -193,20 +193,18 @@ export default function PdfViewer({ fileUrl, fileName, allowDownload, downloadUr
   }, [currentPage, numPages, scrollToPage]);
 
   const handleZoomOut = useCallback(() => {
-    setScale((s) => {
-      const next = Math.max(0.5, parseFloat((s - 0.25).toFixed(2)));
-      setCssScale(next / s);
-      return next;
-    });
-  }, []);
+    const next = Math.max(0.5, parseFloat((scale - 0.25).toFixed(2)));
+    if (next === scale) return;
+    setCssScale(next / scale);
+    setScale(next);
+  }, [scale]);
 
   const handleZoomIn = useCallback(() => {
-    setScale((s) => {
-      const next = Math.min(3, parseFloat((s + 0.25).toFixed(2)));
-      setCssScale(next / s);
-      return next;
-    });
-  }, []);
+    const next = Math.min(3, parseFloat((scale + 0.25).toFixed(2)));
+    if (next === scale) return;
+    setCssScale(next / scale);
+    setScale(next);
+  }, [scale]);
 
   if (loading) return <PdfSkeleton />;
 
