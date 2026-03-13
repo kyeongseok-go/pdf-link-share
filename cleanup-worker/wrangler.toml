@@ -1,0 +1,9 @@
+name = "pdf-link-cleanup"
+main = "index.ts"
+compatibility_date = "2024-09-23"
+
+[triggers]
+crons = ["0 * * * *"]
+
+[vars]
+PAGES_URL = "https://pdf-link-share.pages.dev"
