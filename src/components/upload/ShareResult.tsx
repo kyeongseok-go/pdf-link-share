@@ -70,25 +70,8 @@ export default function ShareResult({ result, generateQr, onReset }: ShareResult
   const shareKakao = useCallback(async () => {
     // Kakao SDK 우선 사용 (NEXT_PUBLIC_KAKAO_APP_KEY 설정 시)
     if (typeof window !== 'undefined' && window.Kakao?.isInitialized()) {
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: result.fileName,
-          description: '📄 PDF 링크공유기로 공유된 문서입니다. 탭하여 열람하세요.',
-          link: {
-            mobileWebUrl: result.shareUrl,
-            webUrl: result.shareUrl,
-          },
-        },
-        buttons: [
-          {
-            title: '문서 열람하기',
-            link: {
-              mobileWebUrl: result.shareUrl,
-              webUrl: result.shareUrl,
-            },
-          },
-        ],
+      window.Kakao.Share.sendScrap({
+        requestUrl: result.shareUrl,
       });
       return;
     }

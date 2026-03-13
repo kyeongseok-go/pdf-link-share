@@ -30,6 +30,7 @@ interface Window {
         content: KakaoShareContent;
         buttons?: KakaoShareButton[];
       }): void;
+      sendScrap(options: { requestUrl: string }): void;
     };
   };
 }
