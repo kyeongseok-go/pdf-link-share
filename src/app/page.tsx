@@ -78,6 +78,22 @@ const TRUST_ITEMS = [
   { icon: '🏫', text: '학부모에게 안내문을 전달하는 학교' },
 ];
 
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'PDF 링크공유기',
+  description: 'PDF 파일을 링크로 변환하여 안전하게 공유하는 무료 서비스',
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://pdfweblink.pages.dev',
+  applicationCategory: 'UtilityApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'KRW',
+  },
+  inLanguage: 'ko',
+};
+
 export default function HomePage() {
   const [stage, setStage] = useState<Stage>('idle');
   const [file, setFile] = useState<File | null>(null);
@@ -166,6 +182,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
       <Header />
 
       <main className="flex-1">

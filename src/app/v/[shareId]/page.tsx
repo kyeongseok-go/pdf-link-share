@@ -39,14 +39,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!doc) {
     return {
       title: `문서를 찾을 수 없습니다 - ${SITE_NAME}`,
-      robots: { index: false, follow: false },
+      robots: {
+        index: false,
+        follow: false,
+        googleBot: { index: false, follow: false },
+      },
     };
   }
 
   return {
     title: `${doc.fileName} - ${SITE_NAME}`,
     description: '📄 안전하게 공유된 문서입니다. 탭하여 열람하세요.',
-    robots: { index: false, follow: false }, // Do not index shared documents
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
     openGraph: {
       title: doc.fileName,
       description: '📄 안전하게 공유된 문서입니다. 탭하여 열람하세요.',
